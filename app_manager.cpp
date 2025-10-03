@@ -1,4 +1,11 @@
 #include "app_manager.h"
+#include <iostream>
+#include <limits>
+#include <string>
+#include <cctype>
+#include <chrono>
+#include <thread>
+using namespace std;
 
 void app_manager::showHelp() {
     cout << "Использование: matrix.exe [СКОРОСТЬ ДЛИНА РЕЖИМ_ЭПИЛЕПСИИ]" << endl;
@@ -26,14 +33,12 @@ void app_manager::getArguments() {
     // Ввод скорости
     while (!flagVel) {
         cout << "Скорость линии 1-30 (символов в секунду) ";
-        int velocity;
         try {
             cin >> velocity;
             if (cin.fail()) {
                 throw invalid_argument("Ошибка: некорректный ввод. Ожидалось целое число.");
             }
             if (velocity > 0 && velocity <= 30) {
-                this->velocity = velocity;
                 flagVel = true;
             }
             else {
@@ -43,21 +48,20 @@ void app_manager::getArguments() {
         catch (const invalid_argument& e) {
             cout << e.what() << endl;
             cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            // Исправленная строка - убираем max
+            cin.ignore(10000, '\n');
         }
     }
 
     // Ввод длины
     while (!flagLength) {
         cout << "Длина линии 1-30 (символов) ";
-        int length;
         try {
             cin >> length;
             if (cin.fail()) {
                 throw invalid_argument("Ошибка: некорректный ввод. Ожидалось целое число.");
             }
             if (length > 0 && length <= 30) {
-                this->length = length;
                 flagLength = true;
             }
             else {
@@ -67,22 +71,23 @@ void app_manager::getArguments() {
         catch (const invalid_argument& e) {
             cout << e.what() << endl;
             cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            // Исправленная строка - убираем max
+            cin.ignore(10000, '\n');
         }
     }
 
     // Ввод режима эпилепсии
     while (!flagEpilepsy) {
         cout << "Режим эпилепсии Y/N (вкл/выкл) ";
-        char epilepsy;
+        char epilepsyChar;
         try {
-            cin >> epilepsy;
+            cin >> epilepsyChar;
             if (cin.fail()) {
                 throw invalid_argument("Ошибка: некорректный ввод.");
             }
-            epilepsy = toupper(epilepsy);
-            if (epilepsy == 'Y' || epilepsy == 'N') {
-                this->epilepsy = (epilepsy == 'Y');
+            epilepsyChar = toupper(epilepsyChar);
+            if (epilepsyChar == 'Y' || epilepsyChar == 'N') {
+                epilepsy = (epilepsyChar == 'Y');
                 flagEpilepsy = true;
             }
             else {
@@ -92,7 +97,8 @@ void app_manager::getArguments() {
         catch (const invalid_argument& e) {
             cout << e.what() << endl;
             cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            // Исправленная строка - убираем max
+            cin.ignore(10000, '\n');
         }
     }
 }
@@ -102,8 +108,8 @@ void app_manager::startMove() {
     bool flag = true;
 
     while (flag) {
-        // Создание новой линии со случайными параметрами
-        myLine line(this->consoleWidth, generateY(), this->length, this->velocity, this->epilepsy);
+        // Всегда начинаем на 10 позиций ЗА правым краем
+        myLine line(this->consoleWidth + 10, generateY(), this->length, this->velocity, this->epilepsy);
         flag = line.moveLine();
     }
 }
@@ -118,7 +124,7 @@ app_manager::app_manager() {
 
     // Настройка консоли
     functional.cleanConsole();
-    functional.changeCursor(); //спрятали курсор
+    functional.changeCursor();
     functional.setConsoleSize();
 
     // Получение размеров консоли
